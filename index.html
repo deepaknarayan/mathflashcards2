@@ -45,42 +45,86 @@
         input[type=number] {
           -moz-appearance: textfield;
         }
+
+        /* Card Flip Styles */
+        .card-container {
+            perspective: 1500px;
+            min-height: 480px; /* Give space for the card content */
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.7s;
+            transform-style: preserve-3d;
+        }
+        .card-inner.is-flipped {
+            transform: rotateY(180deg);
+        }
+        .card-front,
+        .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+            background-color: #f8fafc; /* bg-slate-50 */
+            border-radius: 1rem; /* rounded-2xl */
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 flex items-center justify-center min-h-screen p-4">
 
     <main id="app-container" class="bg-white w-full max-w-2xl mx-auto rounded-2xl shadow-lg p-6 md:p-10 text-center">
         
-        <!-- Game View -->
-        <div id="game-view">
-            <header class="mb-8">
-                <h1 class="text-3xl md:text-4xl font-bold text-indigo-600">Math Whiz!</h1>
-                <p class="text-slate-500 mt-2">Memorize Squares & Cubes from 1 to 50.</p>
-            </header>
-    
-            <div id="question-container" class="mb-8">
-                <p id="question-text" class="text-2xl md:text-3xl font-semibold text-slate-700 h-16 flex items-center justify-center"></p>
-            </div>
-    
-            <div id="answer-container" class="mb-8 flex flex-col items-center space-y-3">
-                <input type="number" id="answer-input" placeholder="Type your answer" class="w-full max-w-xs text-center text-2xl font-semibold border-2 border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition">
-                <button id="check-btn" class="btn w-full max-w-xs bg-indigo-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Check Answer
-                </button>
-                <div class="flex w-full max-w-xs gap-2">
-                    <button id="hint-btn" class="btn flex-1 bg-amber-500 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-400">
-                        Hint
-                    </button>
-                    <button id="show-answer-btn" class="btn flex-1 bg-slate-400 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400">
-                        Show Answer
-                    </button>
+        <div class="card-container">
+            <div id="card-inner" class="card-inner">
+                <!-- Card Front -->
+                <div id="card-front" class="card-front">
+                    <header class="mb-8">
+                        <h1 class="text-3xl md:text-4xl font-bold text-indigo-600">Math Whiz!</h1>
+                        <p class="text-slate-500 mt-2">Memorize Squares & Cubes from 1 to 50.</p>
+                    </header>
+            
+                    <div id="question-container" class="mb-8">
+                        <p id="question-text" class="text-2xl md:text-3xl font-semibold text-slate-700 h-16 flex items-center justify-center"></p>
+                    </div>
+            
+                    <div id="answer-container" class="mb-8 flex flex-col items-center space-y-3">
+                        <input type="number" id="answer-input" placeholder="Type your answer" class="w-full max-w-xs text-center text-2xl font-semibold border-2 border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition">
+                        <button id="check-btn" class="btn w-full max-w-xs bg-indigo-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Check Answer
+                        </button>
+                        <div class="flex w-full max-w-xs gap-2">
+                            <button id="hint-btn" class="btn flex-1 bg-amber-500 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-400">
+                                Hint
+                            </button>
+                            <button id="show-answer-btn" class="btn flex-1 bg-slate-400 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-slate-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400">
+                                Show Answer
+                            </button>
+                        </div>
+                    </div>
+            
+                    <div id="feedback-container" class="min-h-[3rem]">
+                        <p id="feedback-text" class="text-xl font-medium"></p>
+                    </div>
+                </div>
+                <!-- Card Back -->
+                <div id="card-back" class="card-back p-8">
+                    <h2 id="card-back-status" class="text-4xl font-bold mb-4"></h2>
+                    <p id="card-back-answer" class="text-2xl text-slate-600"></p>
                 </div>
             </div>
-    
-            <div id="feedback-container" class="mt-8 min-h-[3rem]">
-                <p id="feedback-text" class="text-xl font-medium"></p>
-            </div>
-    
+        </div>
+
+        <!-- Game View -->
+        <div id="game-view">
             <div id="controls-container" class="mt-6 hidden">
                 <button id="next-btn" class="btn w-full md:w-auto md:mr-2 mb-2 md:mb-0 bg-indigo-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     Next Question
@@ -99,13 +143,15 @@
                 Play Again
             </button>
         </div>
-
     </main>
 
     <script>
         // DOM Elements
         const gameView = document.getElementById('game-view');
         const exitView = document.getElementById('exit-view');
+        const cardInner = document.getElementById('card-inner');
+        const cardBackStatus = document.getElementById('card-back-status');
+        const cardBackAnswer = document.getElementById('card-back-answer');
         const questionText = document.getElementById('question-text');
         const answerInput = document.getElementById('answer-input');
         const checkBtn = document.getElementById('check-btn');
@@ -129,37 +175,40 @@
         // --- Core Game Logic ---
 
         function generateQuestion() {
-            // Reset state and UI
-            state.attempts = 0;
-            state.revealedIndices = new Set();
-            feedbackText.textContent = '';
-            feedbackText.className = 'text-xl font-medium';
-            controlsContainer.classList.add('hidden');
-            answerInput.value = '';
-            answerInput.disabled = false;
-            answerInput.classList.remove('border-green-500', 'border-red-500');
-            checkBtn.disabled = false;
-            hintBtn.disabled = false;
-            showAnswerBtn.disabled = false;
-            answerInput.focus();
+            // Flip card back to the front
+            cardInner.classList.remove('is-flipped');
+            
+            // Delay resetting UI to let the animation play
+            setTimeout(() => {
+                // Reset state and UI
+                state.attempts = 0;
+                state.revealedIndices = new Set();
+                feedbackText.textContent = '';
+                controlsContainer.classList.add('hidden');
+                answerInput.value = '';
+                answerInput.disabled = false;
+                answerInput.classList.remove('border-green-500', 'border-red-500');
+                checkBtn.disabled = false;
+                hintBtn.disabled = false;
+                showAnswerBtn.disabled = false;
+                answerInput.focus();
 
-            // Generate new question data
-            state.isSquare = Math.random() < 0.5;
-            state.number = Math.floor(Math.random() * 50) + 1;
-            const superscript = state.isSquare ? '²' : '³';
-            questionText.innerHTML = `What is ${state.number}<sup class="text-2xl">${superscript}</sup> ?`;
-            state.correctAnswer = state.isSquare ? state.number * state.number : state.number * state.number * state.number;
+                // Generate new question data
+                state.isSquare = Math.random() < 0.5;
+                state.number = Math.floor(Math.random() * 50) + 1;
+                const superscript = state.isSquare ? '²' : '³';
+                questionText.innerHTML = `What is ${state.number}<sup class="text-2xl">${superscript}</sup> ?`;
+                state.correctAnswer = state.isSquare ? state.number * state.number : state.number * state.number * state.number;
+            }, 350); // Half of the transition time
         }
 
         function handleCheckAnswer() {
             const userAnswer = parseInt(answerInput.value, 10);
-
             if (isNaN(userAnswer)) {
                 feedbackText.textContent = 'Please enter a number.';
                 feedbackText.className = 'text-xl font-medium text-amber-600 fade-in';
                 return;
             }
-            
             if (userAnswer === state.correctAnswer) {
                 handleCorrectAnswer();
             } else {
@@ -168,24 +217,27 @@
         }
 
         function handleCorrectAnswer() {
-            feedbackText.textContent = 'Congratulations! That\'s correct.';
-            feedbackText.className = 'text-xl font-medium text-green-600 fade-in';
-            answerInput.classList.add('border-green-500');
+            flipAndShowAnswer({
+                status: 'Correct!',
+                color: 'text-green-600'
+            });
             endRound();
         }
 
         function handleIncorrectAnswer() {
             state.attempts++;
-            answerInput.classList.remove('border-green-500');
             answerInput.classList.add('border-red-500');
-
             if (state.attempts < 2) {
                 feedbackText.textContent = 'Not quite. Try again!';
-                feedbackText.className = 'text-xl font-medium text-amber-600 fade-in';
+                feedbackText.className = 'text-xl font-medium text-red-600 fade-in';
                 answerInput.value = '';
                 answerInput.focus();
             } else {
-                showFinalAnswer();
+                flipAndShowAnswer({
+                    status: 'The Answer Is...',
+                    color: 'text-red-600'
+                });
+                endRound();
             }
         }
         
@@ -218,16 +270,19 @@
         }
 
         function handleShowAnswer() {
-            showFinalAnswer(true);
+            flipAndShowAnswer({
+                status: 'The Answer Is...',
+                color: 'text-sky-600'
+            });
+            endRound();
         }
 
-        function showFinalAnswer(wasRequested = false) {
+        function flipAndShowAnswer({ status, color }) {
             const type = state.isSquare ? 'square' : 'cube';
-            feedbackText.innerHTML = `The ${type} of <strong>${state.number}</strong> is <strong>${state.correctAnswer.toLocaleString()}</strong>.`;
-            // Use a different color if user requested the answer vs. getting it wrong
-            feedbackText.className = `text-xl font-medium ${wasRequested ? 'text-sky-600' : 'text-red-600'} fade-in`;
-            answerInput.value = state.correctAnswer.toLocaleString();
-            endRound();
+            cardBackStatus.textContent = status;
+            cardBackStatus.className = `text-4xl font-bold mb-4 ${color}`;
+            cardBackAnswer.innerHTML = `The ${type} of <strong>${state.number}</strong> is <strong>${state.correctAnswer.toLocaleString()}</strong>.`;
+            cardInner.classList.add('is-flipped');
         }
 
         function endRound() {
@@ -241,11 +296,14 @@
         function showExitScreen() {
             gameView.classList.add('hidden');
             exitView.classList.remove('hidden');
+            // Hide the card container as well
+            document.querySelector('.card-container').classList.add('hidden');
         }
 
         function restartGame() {
             exitView.classList.add('hidden');
             gameView.classList.remove('hidden');
+            document.querySelector('.card-container').classList.remove('hidden');
             generateQuestion();
         }
 
@@ -257,9 +315,7 @@
         answerInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault(); 
-                if(!checkBtn.disabled) {
-                    handleCheckAnswer();
-                }
+                if(!checkBtn.disabled) { handleCheckAnswer(); }
             }
         });
         nextBtn.addEventListener('click', generateQuestion);
