@@ -116,26 +116,28 @@
                     </div>
                 </div>
                 <!-- Card Back -->
-                <div id="card-back" class="card-back p-8">
+                <div id="card-back" class="card-back p-8 flex flex-col justify-center items-center">
                     <h2 id="card-back-status" class="text-4xl font-bold mb-4"></h2>
                     <p id="card-back-answer" class="text-2xl text-slate-600"></p>
+                    <div id="card-back-controls" class="mt-8">
+                        <button id="show-question-btn" class="btn bg-indigo-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Show Question
+                        </button>
+                        <div id="end-round-controls" class="hidden">
+                            <button id="next-btn" class="btn w-full sm:w-auto sm:mr-2 mb-2 sm:mb-0 bg-indigo-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                Next Question
+                            </button>
+                            <button id="exit-btn" class="btn w-full sm:w-auto bg-slate-200 text-slate-700 font-semibold py-3 px-8 rounded-lg hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400">
+                                Exit
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Game View -->
-        <div id="game-view">
-            <div id="controls-container" class="mt-6 hidden">
-                <button id="next-btn" class="btn w-full md:w-auto md:mr-2 mb-2 md:mb-0 bg-indigo-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Next Question
-                </button>
-                <button id="exit-btn" class="btn w-full md:w-auto bg-slate-200 text-slate-700 font-semibold py-3 px-8 rounded-lg hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400">
-                    Exit
-                </button>
-            </div>
-        </div>
-
-        <!-- Exit View -->
+        <!-- This container is now outside the card flip and only holds the exit screen -->
+        <div id="game-view"></div>
         <div id="exit-view" class="hidden">
             <h2 class="text-3xl md:text-4xl font-bold text-indigo-600 mb-4">Great Job!</h2>
             <p class="text-slate-500 text-lg mb-8">Keep practicing to become a true Math Whiz!</p>
@@ -147,18 +149,20 @@
 
     <script>
         // DOM Elements
-        const gameView = document.getElementById('game-view');
+        const appContainer = document.getElementById('app-container');
         const exitView = document.getElementById('exit-view');
+        const cardContainer = document.querySelector('.card-container');
         const cardInner = document.getElementById('card-inner');
         const cardBackStatus = document.getElementById('card-back-status');
         const cardBackAnswer = document.getElementById('card-back-answer');
+        const showQuestionBtn = document.getElementById('show-question-btn');
+        const endRoundControls = document.getElementById('end-round-controls');
         const questionText = document.getElementById('question-text');
         const answerInput = document.getElementById('answer-input');
         const checkBtn = document.getElementById('check-btn');
         const hintBtn = document.getElementById('hint-btn');
         const showAnswerBtn = document.getElementById('show-answer-btn');
         const feedbackText = document.getElementById('feedback-text');
-        const controlsContainer = document.getElementById('controls-container');
         const nextBtn = document.getElementById('next-btn');
         const exitBtn = document.getElementById('exit-btn');
         const playAgainBtn = document.getElementById('play-again-btn');
@@ -175,16 +179,11 @@
         // --- Core Game Logic ---
 
         function generateQuestion() {
-            // Flip card back to the front
             cardInner.classList.remove('is-flipped');
-            
-            // Delay resetting UI to let the animation play
             setTimeout(() => {
-                // Reset state and UI
                 state.attempts = 0;
                 state.revealedIndices = new Set();
                 feedbackText.textContent = '';
-                controlsContainer.classList.add('hidden');
                 answerInput.value = '';
                 answerInput.disabled = false;
                 answerInput.classList.remove('border-green-500', 'border-red-500');
@@ -193,13 +192,12 @@
                 showAnswerBtn.disabled = false;
                 answerInput.focus();
 
-                // Generate new question data
                 state.isSquare = Math.random() < 0.5;
                 state.number = Math.floor(Math.random() * 50) + 1;
                 const superscript = state.isSquare ? '²' : '³';
                 questionText.innerHTML = `What is ${state.number}<sup class="text-2xl">${superscript}</sup> ?`;
                 state.correctAnswer = state.isSquare ? state.number * state.number : state.number * state.number * state.number;
-            }, 350); // Half of the transition time
+            }, 350);
         }
 
         function handleCheckAnswer() {
@@ -217,10 +215,7 @@
         }
 
         function handleCorrectAnswer() {
-            flipAndShowAnswer({
-                status: 'Correct!',
-                color: 'text-green-600'
-            });
+            flipAndShowAnswer({ status: 'Correct!', color: 'text-green-600' }, true);
             endRound();
         }
 
@@ -233,10 +228,7 @@
                 answerInput.value = '';
                 answerInput.focus();
             } else {
-                flipAndShowAnswer({
-                    status: 'The Answer Is...',
-                    color: 'text-red-600'
-                });
+                flipAndShowAnswer({ status: 'The Answer Is...', color: 'text-red-600' }, true);
                 endRound();
             }
         }
@@ -270,18 +262,23 @@
         }
 
         function handleShowAnswer() {
-            flipAndShowAnswer({
-                status: 'The Answer Is...',
-                color: 'text-sky-600'
-            });
-            endRound();
+            // Self-assessment flip, doesn't end the round
+            flipAndShowAnswer({ status: 'The Answer Is...', color: 'text-sky-600' }, false);
         }
 
-        function flipAndShowAnswer({ status, color }) {
+        function flipAndShowAnswer({ status, color }, isRoundOver) {
             const type = state.isSquare ? 'square' : 'cube';
             cardBackStatus.textContent = status;
             cardBackStatus.className = `text-4xl font-bold mb-4 ${color}`;
             cardBackAnswer.innerHTML = `The ${type} of <strong>${state.number}</strong> is <strong>${state.correctAnswer.toLocaleString()}</strong>.`;
+
+            if (isRoundOver) {
+                showQuestionBtn.classList.add('hidden');
+                endRoundControls.classList.remove('hidden');
+            } else {
+                showQuestionBtn.classList.remove('hidden');
+                endRoundControls.classList.add('hidden');
+            }
             cardInner.classList.add('is-flipped');
         }
 
@@ -290,28 +287,26 @@
             checkBtn.disabled = true;
             hintBtn.disabled = true;
             showAnswerBtn.disabled = true;
-            controlsContainer.classList.remove('hidden');
         }
 
         function showExitScreen() {
-            gameView.classList.add('hidden');
+            cardContainer.classList.add('hidden');
             exitView.classList.remove('hidden');
-            // Hide the card container as well
-            document.querySelector('.card-container').classList.add('hidden');
+            appContainer.classList.remove('p-6', 'md:p-10'); // Remove padding for exit screen
         }
 
         function restartGame() {
             exitView.classList.add('hidden');
-            gameView.classList.remove('hidden');
-            document.querySelector('.card-container').classList.remove('hidden');
+            cardContainer.classList.remove('hidden');
+            appContainer.classList.add('p-6', 'md:p-10');
             generateQuestion();
         }
-
 
         // --- Event Listeners ---
         checkBtn.addEventListener('click', handleCheckAnswer);
         hintBtn.addEventListener('click', handleHint);
         showAnswerBtn.addEventListener('click', handleShowAnswer);
+        showQuestionBtn.addEventListener('click', () => cardInner.classList.remove('is-flipped'));
         answerInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault(); 
