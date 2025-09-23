@@ -174,6 +174,9 @@
             correctAnswer: 0,
             attempts: 0,
             revealedIndices: new Set(),
+            reviewPile: [], // For questions the user struggles with
+            lastNumber: null,
+            lastIsSquare: null,
         };
 
         // --- Core Game Logic ---
@@ -192,8 +195,28 @@
                 showAnswerBtn.disabled = false;
                 answerInput.focus();
 
-                state.isSquare = Math.random() < 0.5;
-                state.number = Math.floor(Math.random() * 50) + 1;
+                // Store the last question to prevent immediate repetition
+                state.lastNumber = state.number;
+                state.lastIsSquare = state.isSquare;
+
+                // Decide whether to use a review question or a new random one
+                const shouldUseReviewQuestion = state.reviewPile.length > 0 && Math.random() < 0.4; // 40% chance
+
+                if (shouldUseReviewQuestion) {
+                    const reviewQuestion = state.reviewPile.shift(); // Get the first question from the pile
+                    state.number = reviewQuestion.number;
+                    state.isSquare = reviewQuestion.isSquare;
+                } else {
+                    // Generate a new random question, ensuring it's not the same as the last one
+                    let newNumber, newIsSquare;
+                    do {
+                        newIsSquare = Math.random() < 0.5;
+                        newNumber = Math.floor(Math.random() * 50) + 1;
+                    } while (newNumber === state.lastNumber && newIsSquare === state.lastIsSquare);
+                    state.isSquare = newIsSquare;
+                    state.number = newNumber;
+                }
+
                 const superscript = state.isSquare ? '²' : '³';
                 questionText.innerHTML = `What is ${state.number}<sup class="text-2xl">${superscript}</sup> ?`;
                 state.correctAnswer = state.isSquare ? state.number * state.number : state.number * state.number * state.number;
@@ -228,6 +251,8 @@
                 answerInput.value = '';
                 answerInput.focus();
             } else {
+                // Second incorrect attempt: add to review pile and show answer
+                state.reviewPile.push({ number: state.number, isSquare: state.isSquare });
                 flipAndShowAnswer({ status: 'The Answer Is...', color: 'text-red-600' }, true);
                 endRound();
             }
@@ -263,6 +288,8 @@
 
         function handleShowAnswer() {
             // Self-assessment flip, doesn't end the round
+            // Add to review pile because the user needed to see the answer
+            state.reviewPile.push({ number: state.number, isSquare: state.isSquare });
             flipAndShowAnswer({ status: 'The Answer Is...', color: 'text-sky-600' }, false);
         }
 
@@ -299,6 +326,7 @@
             exitView.classList.add('hidden');
             cardContainer.classList.remove('hidden');
             appContainer.classList.add('p-6', 'md:p-10');
+            state.reviewPile = []; // Clear the review pile on restart
             generateQuestion();
         }
 
